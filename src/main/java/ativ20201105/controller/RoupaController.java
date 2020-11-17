@@ -1,5 +1,14 @@
 package ativ20201105.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -8,7 +17,56 @@ import ativ20201105.repository.RoupaRepository;
 
 @RestController
 @RequestMapping("/api/roupas")
-public class RoupaController extends BaseController<Roupa, RoupaRepository> {
+public class RoupaController {
 
+	@Autowired
+	private RoupaRepository repo;
+
+	@GetMapping
+	public List<Roupa> getAll() {
+		return repo.findAll();
+	}
+	
+	@GetMapping("/total")
+	public String getValorTotal() {
+		List<Double> p = repo.getPrecos();
+		double valor = 0;
+		int quant = 0;
+		for(Double v : p) {
+			valor += v;
+			quant++;
+		}			
+		return "Quantidade de Peças: "+ quant +"\n"
+				+ "Valor Total: "+valor;
+	}
+	@GetMapping("/{id}")
+	public Roupa getById(@PathVariable String id) {
+		return repo.findById(id).get();
+	}
+
+	@PostMapping
+	public String post(@RequestBody Roupa novo) {
+		if (repo.existsById(novo.getId())) {
+			throw new IdExistenteException();
+		}
+		novo = repo.save(novo);
+		return novo.getId();
+	}
+
+	@DeleteMapping("/{id}")
+	public void deleteById(@PathVariable String id) {
+		repo.deleteById(id);
+	}
+
+	@PutMapping("/{id}")
+	public void put(@PathVariable String id, @RequestBody Roupa novo) {
+		if (!id.equals(novo.getId())) {
+			throw new IdsDivergentesException();
+		}
+		if (!repo.existsById(novo.getId())) {
+			throw new IdExistenteException();
+		}
+		repo.save(novo);
+	}
 
 }
